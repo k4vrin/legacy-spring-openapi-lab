@@ -26,4 +26,10 @@ No enterprise source, deployment, API, or database is involved. These results es
 
 Execution on Java 8 itself, external Tomcat installation, reverse-proxy behavior, authentication, and production deployment have not been verified. Tomcat can log Java module-access warnings during local shutdown; the recorded HTTP and test results still passed.
 
-The resolved dependency graph is reproducible with `./mvnw dependency:tree`. No before/after framework-version comparison against a separately committed baseline is claimed, and no remote repository or Git history has been created.
+The resolved dependency graph is reproducible with `./mvnw dependency:tree`. No before/after framework-version comparison against a separately committed baseline is claimed.
+
+## Publication and documentation follow-up
+
+The existing sample was committed and pushed to the public [legacy-spring-openapi-lab repository](https://github.com/k4vrin/legacy-spring-openapi-lab) on 15 October 2026 after all eight tests passed again. The architecture, lessons, and Persian post draft were added afterward as a separate documentation change. The initializer and condition remain separate; this follow-up changes no application source or runtime configuration.
+
+Documentation checks validated local Markdown links, balanced fences, whitespace, and excluded enterprise identifiers across nine Markdown files. All seven Mermaid diagrams passed parsing with Mermaid 11.4.1. This is a syntax check; diagram layout was not visually inspected. Parser dependencies were installed temporarily outside the repository and are not project dependencies.

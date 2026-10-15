@@ -1,5 +1,7 @@
 # Integration decisions
 
+See [application architecture](ARCHITECTURE.md) for Mermaid diagrams and the recorded decision to retain a separate initializer. The [learning documents](README.md) explain the lifecycle in more detail.
+
 ## Preserve the established MVC configuration
 
 XML remains the owner of MVC. The documentation configuration does not use `@EnableWebMvc`. Both the MVC infrastructure and springdoc can use the explicitly named conversion service.

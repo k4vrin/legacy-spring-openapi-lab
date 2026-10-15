@@ -32,6 +32,12 @@ curl http://localhost:8080/legacy-orders/api/orders/1
 
 Records are held in memory and disappear on restart. This is a local teaching application without authentication.
 
+## Learn the startup model
+
+The [architecture guide](docs/ARCHITECTURE.md) includes Mermaid flowcharts for context ownership, startup, HTTP requests, and the flag lifecycle. It records why this sample keeps property loading in the initializer and registration decisions in the condition.
+
+Follow the [three educational lessons](docs/README.md) on initializers, the Environment, and conditions. Each includes a source walkthrough, an experiment, and recall questions. A [Persian LinkedIn draft](docs/linkedin-post.fa.md) explains the same choices through the sample.
+
 ## Documentation switch
 
 `src/main/resources/api-docs.properties` contains:
