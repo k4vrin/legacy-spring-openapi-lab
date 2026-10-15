@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="4.0" metadata-complete="true">
+  <display-name>Legacy Orders</display-name>
+  <context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>/WEB-INF/root-context.xml</param-value>
+  </context-param>
+  <listener><listener-class>org.springframework.web.context.ContextLoaderListener</listener-class></listener>
+  <servlet>
+    <servlet-name>orders</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <init-param><param-name>contextConfigLocation</param-name><param-value>/WEB-INF/orders-servlet.xml</param-value></init-param>
+    <init-param>
+      <param-name>contextInitializerClasses</param-name>
+      <param-value>dev.example.legacyorders.config.ApiDocsPropertyInitializer</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping><servlet-name>orders</servlet-name><url-pattern>/api/*</url-pattern></servlet-mapping>
+</web-app>
