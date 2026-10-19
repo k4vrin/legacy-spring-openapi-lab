@@ -1,4 +1,4 @@
-package dev.example.legacyorders.order;
+package dev.kavrin.legacyorders.order;
 
 public final class OrderLine {
     private final String productCode;

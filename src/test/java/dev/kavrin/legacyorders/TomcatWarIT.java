@@ -1,9 +1,9 @@
-package dev.example.legacyorders;
+package dev.kavrin.legacyorders;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.example.legacyorders.docs.ApiDocsEnabledCondition;
-import dev.example.legacyorders.support.LocalTomcat;
+import dev.kavrin.legacyorders.docs.ApiDocsEnabledCondition;
+import dev.kavrin.legacyorders.support.LocalTomcat;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;

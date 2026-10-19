@@ -4,13 +4,13 @@ A Spring `Condition` decides whether an annotated component can be registered. I
 
 ## Read the sample's decision
 
-[ApiDocsConfiguration](../../src/main/java/dev/example/legacyorders/docs/ApiDocsConfiguration.java) is annotated with:
+[ApiDocsConfiguration](../../src/main/java/dev/kavrin/legacyorders/docs/ApiDocsConfiguration.java) is annotated with:
 
 ```java
 @Conditional(ApiDocsEnabledCondition.class)
 ```
 
-The servlet component scan considers this class. [ApiDocsEnabledCondition](../../src/main/java/dev/example/legacyorders/docs/ApiDocsEnabledCondition.java) reads the effective value:
+The servlet XML explicitly declares this class as `apiDocsConfiguration`; its sibling `docs` package is outside the restricted API scan. Annotation processing evaluates its condition before instantiation and skips its imports and bean methods if disabled. The ordinary XML-declared object remains in both states. [ApiDocsEnabledCondition](../../src/main/java/dev/kavrin/legacyorders/docs/ApiDocsEnabledCondition.java) reads the effective value:
 
 ```java
 String value = context.getEnvironment()
@@ -24,13 +24,13 @@ flowchart TD
     F[Effective property value] --> P{Valid boolean text?}
     P -->|no| E[Fail startup]
     P -->|yes| B{true?}
-    B -->|yes| R[Register configuration and its beans]
-    B -->|no| S[Skip configuration]
+    B -->|yes| R[Process imports and bean methods]
+    B -->|no| S[Skip contributions; XML object remains]
     R --> A[Docs generator and viewer available]
     S --> N[Docs endpoints and assets unavailable]
 ```
 
-When skipped, the sample has no documentation configuration bean, no imported generator configuration from that class, and no viewer mappings from that class. The existing orders controller belongs to a separate package and remains registered.
+When skipped, the sample has no imported generator configuration from that class and no viewer mappings from that class. Its XML-declared configuration object is still present but contributes no documentation beans. The existing orders controller belongs to a separate package and remains registered.
 
 ## What matches receives
 
@@ -54,7 +54,7 @@ Run the existing case:
 ./mvnw '-Dtest=DocumentationIntegrationTest#changingAPropertyAfterStartupDoesNotCreateDocumentationBeans' test
 ```
 
-It starts with documentation disabled, adds a higher-priority true value after refresh, and verifies that the documentation endpoint still returns 404 and its configuration bean remains absent. The Environment has changed; the registered bean definitions have not.
+It starts with documentation disabled, adds a higher-priority true value after refresh, and verifies that the documentation endpoint still returns 404 and its generator properties and viewer mappings remain absent. The Environment has changed; the registered bean definitions have not.
 
 The full suite also checks invalid input and both flag states. Each mode should preserve order creation, retrieval, and validation. The WAR tests verify the actual servlet prefix over HTTP rather than relying only on bean assertions.
 

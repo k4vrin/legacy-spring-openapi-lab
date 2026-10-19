@@ -1,4 +1,4 @@
-package dev.example.legacyorders.api;
+package dev.kavrin.legacyorders.api;
 
 import java.util.ArrayList;
 import java.util.Collections;

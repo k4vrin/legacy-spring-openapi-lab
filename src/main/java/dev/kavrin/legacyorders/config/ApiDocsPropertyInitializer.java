@@ -1,4 +1,4 @@
-package dev.example.legacyorders.config;
+package dev.kavrin.legacyorders.config;
 
 import java.io.IOException;
 import org.springframework.context.ApplicationContextInitializer;

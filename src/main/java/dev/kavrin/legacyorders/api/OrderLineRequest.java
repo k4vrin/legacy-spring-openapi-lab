@@ -1,4 +1,4 @@
-package dev.example.legacyorders.api;
+package dev.kavrin.legacyorders.api;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;

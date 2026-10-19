@@ -6,7 +6,7 @@ See [application architecture](ARCHITECTURE.md) for Mermaid diagrams and the rec
 
 XML remains the owner of MVC. The documentation configuration does not use `@EnableWebMvc`. Both the MVC infrastructure and springdoc can use the explicitly named conversion service.
 
-The root context scans only services and storage. The child scans controllers and the conditional documentation class. This prevents accidental documentation registration in the root context and keeps servlet infrastructure with the handlers it describes.
+The root context scans only services and storage. The child scans only the API package, with default filters disabled and explicit controller/advice filters. It registers the conditional documentation class using an XML bean declaration outside that scan hierarchy. This preserves the existing advice, avoids unrelated components, and keeps servlet infrastructure with the handlers it describes. See the [explicit registration decision](ARCHITECTURE.md#decision-register-documentation-explicitly).
 
 ## Load the flag before registration
 

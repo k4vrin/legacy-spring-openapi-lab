@@ -1,7 +1,7 @@
-package dev.example.legacyorders.api;
+package dev.kavrin.legacyorders.api;
 
-import dev.example.legacyorders.order.OrderLine;
-import dev.example.legacyorders.order.OrderService;
+import dev.kavrin.legacyorders.order.OrderLine;
+import dev.kavrin.legacyorders.order.OrderService;
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;

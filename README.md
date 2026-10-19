@@ -4,6 +4,8 @@ A fictional orders API showing how to add OpenAPI to an XML-configured Spring MV
 
 The application uses `web.xml`, a root service context, a DispatcherServlet child context, and an optional documentation configuration. All code and example data are original. There is no database or connection to an enterprise system.
 
+The integration demonstrates keeping controller discovery narrow and adding OpenAPI through an explicit XML bean declaration, without expanding the component scan to unrelated configuration or infrastructure.
+
 ## Build and run
 
 Use JDK 17 for the documented build. Application classes are compiled with `--release 8`; running the project on Java 8 itself has not been verified.
@@ -48,7 +50,7 @@ demo.api-docs.enabled=false
 
 Plain Spring does not automatically load this file. The servlet's `ApiDocsPropertyInitializer` loads it before XML scanning and condition evaluation. It adds the packaged defaults after the standard property sources, allowing the JVM system property to override them.
 
-`ApiDocsEnabledCondition` accepts `true` or `false`, ignoring case and surrounding whitespace. Missing values mean disabled; malformed values fail startup. The condition controls registration of `ApiDocsConfiguration`, its springdoc imports, and its viewer resource beans.
+`ApiDocsEnabledCondition` accepts `true` or `false`, ignoring case and surrounding whitespace. Missing values mean disabled; malformed values fail startup. The condition controls processing of `ApiDocsConfiguration` and registration of its springdoc imports and viewer resource beans. The XML-declared configuration object itself remains in both states; with false, it contributes no documentation beans.
 
 To run with documentation disabled:
 
@@ -71,7 +73,23 @@ Tomcat reads web.xml
     conditional documentation configuration → springdoc + local Swagger UI
 ```
 
-The root scan covers only the order service package. Controllers and documentation belong to the servlet context. XML MVC and springdoc share the named `mvcConversionService`. The optional configuration explicitly registers resource handlers because XML MVC does not invoke `WebMvcConfigurer` callbacks.
+The root scan covers only the order service package. The child scans only `dev.kavrin.legacyorders.api`, with default filters disabled and explicit `Controller` and `ControllerAdvice` filters. These include the composed `@RestController` and existing `@RestControllerAdvice` annotations, preserving JSON errors. Ordinary components and configuration classes in that package are excluded.
+
+`ApiDocsConfiguration` lives in the sibling `docs` package, outside the scan hierarchy, and is registered explicitly in `orders-servlet.xml`:
+
+```xml
+<context:component-scan base-package="dev.kavrin.legacyorders.api" use-default-filters="false">
+  <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+  <context:include-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+</context:component-scan>
+<bean id="apiDocsConfiguration" class="dev.kavrin.legacyorders.docs.ApiDocsConfiguration"/>
+```
+
+`@Configuration` marks a class for configuration processing; it does not make an undiscovered class register itself. Explicit XML registration lets us add documentation without broadening which components are discovered. The scan also enables annotation processing, so the XML-declared configuration's `@Conditional`, `@Import`, and `@Bean` annotations are processed. With the flag false, configuration processing skips its imports and bean methods; it does not undo the XML declaration of the configuration object itself.
+
+`web.xml` declares the listener, servlet, initializer, and `/api/*` routing. `orders-servlet.xml` defines beans inside that servlet's child context. Servlet mapping routes HTTP requests; component scanning discovers beans; springdoc's `packagesToScan` and `pathsToMatch` filter the generated specification, without registering controllers or changing request routing. The child resolves services from the root; the root cannot resolve beans defined only in the child.
+
+XML MVC and springdoc share the named `mvcConversionService`. The optional configuration explicitly registers resource handlers because XML MVC does not invoke `WebMvcConfigurer` callbacks.
 
 This deliberately legacy baseline pins Spring 5.3.39, springdoc 1.8.0, Jackson 2.17.3, and Swagger UI 5.17.14. The local test container is Tomcat 9.0.113. These choices illustrate compatibility work; they are not a recommendation for a new application stack.
 

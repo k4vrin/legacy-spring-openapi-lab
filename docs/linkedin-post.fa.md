@@ -3,64 +3,131 @@ type: linkedin-post
 language: fa
 status: draft-unpublished-on-linkedin
 created: 2026-10-15
-format: caption-and-carousel-outline
+updated: 2026-10-19
+format: caption-and-carousel
 ---
 
 # پیش‌نویس پست لینکدین
 
-این متن هنوز در لینکدین منتشر نشده. پروژه و نتیجه‌های اجرایی مربوط به نمونه مستقل هستن. قبل از انتشار، کپشن و کاروسل با هم بازبینی بشن.
+این متن هنوز در لینکدین منتشر نشده. مثال‌ها مربوط به نمونه مستقل `legacy-spring-openapi-lab` هستن و کدهای زیر با پیاده‌سازی همین ریپو مطابقت دارن.
 
 ## کپشن
 
-توی یک پروژه قدیمی Spring MVC، قرار بود مستندات OpenAPI اضافه کنیم.
+وقتی Spring خودش Component Scan داره، چرا باید یه Configuration رو صریح توی XML ثبت کنیم؟
 
-پروژه Spring Boot نبود. با XML تنظیم می‌شد و به شکل WAR روی Tomcat اجرا می‌شد. باید مستندات رو به همین ساختار اضافه می‌کردیم و حواسمون به dependencyهای موجود و رفتار APIها هم می‌بود.
+برای بررسی این سؤال، ما یه نمونه مستقل با API فرضی سفارش‌ها ساختیم: Spring MVC با تنظیمات XML، خروجی WAR روی Tomcat و بدون Spring Boot startup.
 
-یکی از تصمیم‌ها، شرط فعال شدن مستندات بود. برنامه از قبل تنظیماتی داشت که از دیتابیس خونده می‌شدن؛ فعال شدن configuration مستندات هم به یک flag وابسته شد.
+می‌خواستیم Springdoc رو اضافه کنیم، بدون اینکه محدوده کشف Beanها رو بی‌دلیل بزرگ کنیم. برای همین اسکن رو به پکیج API و Annotationهای Controller و ControllerAdvice محدود کردیم و Configuration مستندات رو بیرون از این محدوده، با یه `<bean>` توی XML ثبت کردیم.
 
-برای توضیح این تجربه، یک نمونه مستقل با API فرضی سفارش‌ها ساختم. توی این نمونه، تنظیمات از فایل properties میان و با یک JVM system property می‌شه مقدار پیش‌فرض رو override کرد. به دیتابیس هم نیاز نداره.
+`@Configuration` به‌تنهایی باعث کشف کلاس نمی‌شه. کلاس باید از طریق Scan، Import یا ثبت صریح وارد پردازش Spring بشه. توی نمونه ما هم پکیج `docs` بیرون از اسکنه، هم فیلترها فقط Controller و Advice رو می‌پذیرن.
 
-این‌بار سؤال جالب برای من این بود: فایل رو همون داخل شرط بخونیم یا بارگذاری تنظیمات رو جدا نگه داریم؟
+ما مرز Contextها رو هم حفظ کردیم: سرویس و Repository توی Root هستن؛ Controllerها، MVC و OpenAPI توی Child متعلق به DispatcherServlet. Child می‌تونه Beanهای Parent رو پیدا کنه، ولی Parent به Beanهای مختص Child دسترسی نداره.
 
-من توی نمونه این دو مسئولیت رو جدا نگه داشتم:
+فعال شدن مستندات همچنان با فایل properties و JVM system property کنترل می‌شه. Initializer قبل از refresh فایل رو به Environment اضافه می‌کنه؛ بعد Condition مقدار مؤثر رو می‌خونه و درباره ثبت Configuration تصمیم می‌گیره. ما I/O رو داخل شرط نبردیم و دیتابیسی هم اضافه نکردیم.
 
-`ApplicationContextInitializer` قبل از refresh شدن context، فایل رو به‌عنوان یک PropertySource به Environment اضافه می‌کنه.
+این تصمیم موقع startup گرفته می‌شه. تغییر مقدار بعد از بالا اومدن برنامه، به‌تنهایی Beanها رو ایجاد یا حذف نمی‌کنه؛ برای اعمال این تصمیم باید Context دوباره ساخته بشه.
 
-`Environment` خودِ فایل properties نیست؛ مقدار هر کلید رو از بین منبع‌های تنظیمات و با توجه به ترتیبشون پیدا می‌کنه. فایل نمونه رو آخر این ترتیب گذاشتم تا مقدار JVM بتونه روی پیش‌فرض بسته‌بندی‌شده اولویت داشته باشه.
+تست‌ها کشف محدود Controllerها، ثبت صریح Configuration، مرز Root/Child و هر دو حالت flag رو بررسی می‌کنن. وقتی مستندات خاموشه، endpointهای JSON، YAML و فایل‌های Swagger UI در دسترس نیستن، ولی API سفارش‌ها و خطاهای JSON خودشون کار می‌کنن. تست WAR همین مسیرها رو روی Tomcat هم بررسی می‌کنه.
 
-بعد `Condition` مقدار آماده رو می‌خونه، معتبر بودنش رو بررسی می‌کنه و درباره ثبت configuration تصمیم می‌گیره. خودش فایل یا دیتابیس رو نمی‌خونه.
-
-این جداسازی اجباری نیست. برای من کمک کرد زمان بارگذاری تنظیمات و زمان تصمیم‌گیری رو واضح‌تر ببینم و منطق I/O رو از شرط بیرون نگه دارم.
-
-یک مرز مهم هم داره: این تصمیم موقع startup گرفته می‌شه. تغییر مقدار بعد از بالا اومدن برنامه، به‌تنهایی Beanها رو حذف یا ایجاد نمی‌کنه.
-
-توی نمونه، هر دو حالت روشن و خاموش رو بررسی کردم. هشت تست پاس شدن، از جمله اجرای WAR روی Tomcat؛ API سفارش‌ها توی هر دو حالت کار می‌کنه و مستندات توی حالت خاموش در دسترس نیستن.
-
-کد، نمودار معماری و سه یادداشت آموزشی:
+کد و راهنمای معماری:
 https://github.com/k4vrin/legacy-spring-openapi-lab
 
-شما برای چنین تنظیمی، بارگذاری منبع رو از شرط جدا می‌کنید یا ترجیح می‌دید همه‌چیز توی همون کلاس بمونه؟
+شما برای اضافه کردن Configuration به یه پروژه Legacy، چه زمانی ثبت صریح رو به گسترش Scan ترجیح می‌دید؟
 
-#Java #SpringMVC #OpenAPI #Swagger #BackendDevelopment
+#Java #SpringMVC #SpringFramework #OpenAPI #BackendDevelopment
 
-## طرح کاروسل
+## کاروسل
 
-| اسلاید | موضوع | تصویر یا مدرک |
-|---|---|---|
-| ۱ | OpenAPI در Spring MVC بدون تبدیل برنامه به Boot | مسئله نمونه |
-| ۲ | برنامه از کجا بالا میاد؟ | Tomcat، root context و servlet context |
-| ۳ | Initializer دقیقاً چه زمانی اجرا می‌شه؟ | مسیر قبل از refresh و قبل از ارزیابی شرط |
-| ۴ | Environment با فایل properties فرق داره | چند PropertySource و یک کلید مشترک |
-| ۵ | چرا مقدار JVM روی پیش‌فرض فایل اولویت داره؟ | addLast و lookup ترتیب‌دار |
-| ۶ | شرط فقط تصمیم می‌گیره | مقدار مؤثر، اعتبارسنجی و ثبت configuration |
-| ۷ | چرا مسئولیت‌ها رو جدا نگه داشتم؟ | مزیت خوانایی و هزینه کلاس و init parameter بیشتر |
-| ۸ | startup flag با تغییر زنده فرق داره | تغییر مقدار بعد از startup و نیاز به ساخت مجدد context |
-| ۹ | چه چیزی بررسی شد؟ | تست‌های هر دو حالت و اجرای WAR نمونه روی Tomcat |
+### اسلاید ۱ — چرا Spring یه Configuration رو پیدا نمی‌کنه؟
 
-## مرزهای ادعا
+وقتی Component Scan داریم، چرا گاهی Bean رو صریح توی XML ثبت می‌کنیم؟
 
-- این متن از نتیجه‌های نمونه مستقل برای ادعای تأیید deployment محیط کار استفاده نمی‌کنه.
-- فایل‌ها، تصاویر، نام‌ها و داده‌های عمومی باید متعلق به همین نمونه باشن.
-- برنامه Boot startup نداره، اما springdoc از کتابخانه‌های پشتیبان Boot استفاده می‌کنه.
-- فعال بودن مستندات و تنظیمات Try it out معادل authentication نیستن.
-- هشت تست فعلی همه جزئیات Environment یا همه فازهای refresh رو اثبات نمی‌کنن؛ درس‌ها برای این بخش‌ها به API رسمی Spring ارجاع می‌دن.
+`Legacy Spring MVC • OpenAPI`
+
+### اسلاید ۲ — مسئله ما
+
+ما می‌خواستیم OpenAPI رو به یه نمونه Spring MVC با XML اضافه کنیم. خروجی همچنان WAR روی Tomcat می‌مونه؛ قرارداد APIها و startup برنامه هم حفظ می‌شن.
+
+Spring Boot startup نداریم، ولی Springdoc از کتابخانه‌های پشتیبان Boot استفاده می‌کنه؛ پس نمی‌گیم هیچ کتابخانه Boot توی dependencyها نیست.
+
+### اسلاید ۳ — web.xml چه کار می‌کنه؟
+
+Tomcat از روی `web.xml` Listener و Servlet رو راه می‌اندازه و درخواست رو به Servlet مربوط می‌رسونه:
+
+```xml
+<servlet-mapping><servlet-name>orders</servlet-name><url-pattern>/api/*</url-pattern></servlet-mapping>
+```
+
+`HTTP → Tomcat → DispatcherServlet → Spring MVC Controller`
+
+`orders-servlet.xml` تنظیمات Beanهای MVC رو مشخص می‌کنه. Servlet mapping مسیر ورود درخواست رو تعیین می‌کنه؛ component scanning کلاس‌های واجد شرایط رو کشف می‌کنه. این دو کار یکی نیستن.
+
+### اسلاید ۴ — دو Context
+
+`ContextLoaderListener → root-context.xml → OrderService + InMemoryOrderRepository`
+
+`DispatcherServlet → orders-servlet.xml → Controller + Advice + MVC + OpenAPI`
+
+Child سرویس‌ها رو از Parent پیدا می‌کنه. Parent به Controllerهای مختص Child دسترسی نداره. ما سرویس‌ها رو دوباره توی Child ثبت نمی‌کنیم و همون یک تنظیم MVC و `mvcConversionService` مشترک رو نگه می‌داریم.
+
+### اسلاید ۵ — هم پکیج مهمه، هم Filter
+
+```xml
+<context:component-scan base-package="dev.kavrin.legacyorders.api" use-default-filters="false">
+  <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+  <context:include-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+</context:component-scan>
+```
+
+فیلتر اول `@RestController` رو هم از طریق meta-annotation می‌پذیره. فیلتر دوم `@RestControllerAdvice` موجود رو نگه می‌داره تا خطاهای JSON قبلی حفظ بشن. ما Advice جدیدی اضافه نکردیم؛ Componentها و Configurationهای معمولی توی این پکیج هم خودکار ثبت نمی‌شن.
+
+### اسلاید ۶ — چرا @Configuration کافی نیست؟
+
+کلاس `dev.kavrin.legacyorders.docs.ApiDocsConfiguration` بیرون از پکیج `dev.kavrin.legacyorders.api` قرار داره.
+
+حتی اگه فقط پکیج Scan رو گسترده کنیم، یه `@Configuration` معمولی با فیلترهای Controller و Advice مطابقت نداره. Annotation کلاس رو برای پردازش معرفی می‌کنه؛ خودش کلاس رو وارد Context نمی‌کنه.
+
+### اسلاید ۷ — تصمیم ما: ثبت صریح
+
+ما به‌جای گسترش پکیج و فیلترهای اسکن، همین Configuration رو توی `orders-servlet.xml` معرفی کردیم:
+
+```xml
+<bean id="apiDocsConfiguration" class="dev.kavrin.legacyorders.docs.ApiDocsConfiguration"/>
+```
+
+این انتخاب ورود Beanهای جدید رو قابل‌ردگیری نگه می‌داره و احتمال کشف ناخواسته سرویس‌ها یا زیرساخت‌های دیگه رو کم می‌کنه. این یه انتخاب متناسب با مرزهای این نمونه است؛ گسترش Scan همیشه تصمیم اشتباهی نیست.
+
+### اسلاید ۸ — ثبت شرطی و تولید Spec
+
+کلاس ثبت‌شده همچنان این Annotationها رو داره:
+
+```java
+@Configuration(proxyBeanMethods = false)
+@Conditional(ApiDocsEnabledCondition.class)
+@Import({SpringDocConfiguration.class, SpringDocWebMvcConfiguration.class})
+```
+
+`Initializer → Environment → @Conditional → Configuration + imports + beans`
+
+پیش‌فرض فایل classpath:
+
+```properties
+demo.api-docs.enabled=false
+```
+
+Initializer با `addLast` پیش‌فرض‌ها رو اضافه می‌کنه تا JVM system property اولویت داشته باشه. پردازش Annotationها از طریق component-scan فعاله؛ ثبت XML شرط رو دور نمی‌زنه. با false، Importها و متدهای Bean پردازش نمی‌شن و Beanهای مستندات ساخته نمی‌شن؛ خود شیء Configuration که XML ثبت کرده توی Context می‌مونه، ولی مستنداتی اضافه نمی‌کنه. مقدار نامعتبر هم startup رو متوقف می‌کنه.
+
+بعد از ثبت، Springdoc متادیتای Mappingها، DTOها و Validation رو بررسی می‌کنه؛ برای ساخت Spec لازم نیست منطق ایجاد سفارش اجرا بشه. فیلترهای Springdoc یعنی `packagesToScan` و `pathsToMatch` فقط محتوای Spec رو محدود می‌کنن؛ Controller ثبت نمی‌کنن و مسیر HTTP رو تغییر نمی‌دن.
+
+### اسلاید ۹ — چی رو بررسی می‌کنیم؟
+
+ما هر دو حالت روشن و خاموش رو با تست Context و اجرای WAR روی Tomcat بررسی می‌کنیم:
+
+- Controller و Advice از اسکن محدود میان؛ Configuration مستندات از XML.
+- Child سرویس Parent رو می‌بینه؛ Root نمی‌تونه Controllerهای Child رو پیدا کنه.
+- مستندات در حالت خاموش 404 می‌دن؛ API و خطاهای سفارش‌ها در هر دو حالت حفظ می‌شن.
+- تغییر flag بعد از startup ثبت Beanها رو تغییر نمی‌ده.
+
+در بررسی ۱۹ اکتبر ۲۰۲۶، هر ده مورد تست پاس شدن: هشت مورد Context/MockMvc و دو مورد اجرای WAR. نیازی به دیتابیس نداریم. نتیجه‌های اجرایی و محدودیت‌ها توی [گزارش بررسی](VERIFICATION.md) ثبت می‌شن؛ این بررسی‌ها ادعای تأیید محیط کاری یا deployment خارجی نیستن.
+
+https://github.com/k4vrin/legacy-spring-openapi-lab

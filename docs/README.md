@@ -8,10 +8,10 @@ Start with the [architecture](ARCHITECTURE.md) to see how the WAR starts and whe
 
 Each lesson includes a source walkthrough, a small experiment, and recall questions with answers after the questions.
 
-The architecture records the decision to keep the initializer separate from the condition. This is a project choice with tradeoffs, not a requirement imposed by Spring.
+The architecture records why documentation is registered explicitly outside the restricted controller scan, and why the initializer stays separate from the condition. These are project choices with tradeoffs, not requirements imposed by Spring.
 
 - [Integration decisions](DESIGN.md)
 - [Executed verification and limits](VERIFICATION.md)
-- [Persian LinkedIn draft and carousel outline](linkedin-post.fa.md)
+- [Persian LinkedIn draft and carousel](linkedin-post.fa.md)
 
 Run instructions are in the [project README](../README.md). The LinkedIn text is a draft; publishing it on GitHub does not mean it has been posted on LinkedIn.

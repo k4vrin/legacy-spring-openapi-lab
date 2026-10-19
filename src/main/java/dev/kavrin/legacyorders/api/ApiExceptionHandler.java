@@ -1,6 +1,6 @@
-package dev.example.legacyorders.api;
+package dev.kavrin.legacyorders.api;
 
-import dev.example.legacyorders.order.OrderNotFoundException;
+import dev.kavrin.legacyorders.order.OrderNotFoundException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;

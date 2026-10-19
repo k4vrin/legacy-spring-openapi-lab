@@ -1,4 +1,4 @@
-package dev.example.legacyorders.order;
+package dev.kavrin.legacyorders.order;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package dev.example.legacyorders.support;
+package dev.kavrin.legacyorders.support;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

@@ -1,4 +1,4 @@
-package dev.example.legacyorders.docs;
+package dev.kavrin.legacyorders.docs;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -23,7 +23,7 @@ public class ApiDocsConfiguration {
     @Bean
     public SpringDocConfigProperties springDocConfigProperties() {
         SpringDocConfigProperties properties = new SpringDocConfigProperties();
-        properties.setPackagesToScan(Arrays.asList("dev.example.legacyorders.api"));
+        properties.setPackagesToScan(Arrays.asList("dev.kavrin.legacyorders.api"));
         properties.setPathsToMatch(Arrays.asList("/orders", "/orders/**"));
         properties.setOverrideWithGenericResponse(false);
         return properties;

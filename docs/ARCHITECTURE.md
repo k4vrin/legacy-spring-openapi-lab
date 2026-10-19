@@ -18,7 +18,9 @@ flowchart TD
     O --> V[Local Swagger UI resource handlers]
 ```
 
-[root-context.xml](../src/main/webapp/WEB-INF/root-context.xml) scans the `order` package. [orders-servlet.xml](../src/main/webapp/WEB-INF/orders-servlet.xml) scans `api` and `docs`. The child can resolve service dependencies from the parent; the parent does not resolve controller beans from its child. These contexts are not separate processes.
+[root-context.xml](../src/main/webapp/WEB-INF/root-context.xml) scans only the `order` package. [orders-servlet.xml](../src/main/webapp/WEB-INF/orders-servlet.xml) scans only `api`, with `use-default-filters="false"` and explicit annotation filters for `Controller` and `ControllerAdvice`. Meta-annotation matching includes `@RestController` and the existing `@RestControllerAdvice`. The advice filter preserves the current JSON error contract without adding another advice class.
+
+The child resolves `OrderService` and `InMemoryOrderRepository` from the parent, without registering local copies. The root cannot resolve controllers, advice, or documentation beans defined only in its child. These contexts are not separate processes. Tests assert local bean counts, identical inherited service instances, failed parent lookups for child beans, and no overlapping application bean names.
 
 XML remains the owner of MVC. The named `mvcConversionService` is shared with springdoc, avoiding a second MVC registration. Viewer resource handlers are explicit beans because XML MVC does not invoke `WebMvcConfigurer` callbacks.
 
@@ -30,11 +32,11 @@ flowchart TD
     B --> I[Run ApiDocsPropertyInitializer before refresh]
     I --> P[Append packaged defaults as apiDocsDefaults]
     P --> X[Refresh context and process servlet XML]
-    X --> SC[Scan controller and documentation packages]
+    X --> SC[Restricted API scan and explicit XML documentation bean]
     SC --> K[ApiDocsEnabledCondition reads effective flag]
     K --> Q{Value after trimming}
-    Q -->|true| Y[Register documentation configuration and imports]
-    Q -->|false or absent| N[Skip documentation configuration]
+    Q -->|true| Y[Process configuration imports and bean methods]
+    Q -->|false or absent| N[Skip imports and bean methods; XML object remains]
     Q -->|other value| E[Fail startup with configuration error]
     Y --> H[Specification and viewer handlers available]
     N --> F[Specification and viewer routes return 404]
@@ -50,6 +52,16 @@ Failure to load the packaged file aborts startup in the initializer. A malformed
 
 ## Request paths
 
+`web.xml` is the servlet-container deployment descriptor: Tomcat uses it to create `ContextLoaderListener` and `DispatcherServlet`, select their XML files, attach the initializer, and route `/api/*`. `orders-servlet.xml` is Spring bean configuration for that servlet's child context. Its component scan does not choose a servlet URL.
+
+| Mechanism | Responsibility | Example |
+|---|---|---|
+| Servlet mapping | Route HTTP requests to the servlet | `/api/*` in `web.xml` |
+| Component scanning | Discover eligible bean classes in a context | `api` package and controller/advice annotation filters |
+| Springdoc API filtering | Select registered handlers for the generated description | `packagesToScan=dev.kavrin.legacyorders.api`, `pathsToMatch=/orders,/orders/**` |
+
+Springdoc filtering neither creates controller beans nor prevents requests to excluded business handlers. Operation paths are relative to the servlet; the `/api` prefix belongs in the server base.
+
 ```mermaid
 flowchart LR
     B[Browser] -->|GET /legacy-orders/api/docs/index.html| V[Viewer resource handler]
@@ -64,6 +76,18 @@ flowchart LR
 ```
 
 The WAR context is `/legacy-orders`, the servlet mapping is `/api/*`, and the operation path is `/orders`. The generated server base includes `/legacy-orders/api`. Specification generation inspects metadata; fetching it does not execute order creation. UI execution sends actual requests to this fictional API.
+
+## Decision: register documentation explicitly
+
+The `docs` package is a sibling of `api`, outside the scanned hierarchy. XML declares its configuration directly:
+
+```xml
+<bean id="apiDocsConfiguration" class="dev.kavrin.legacyorders.docs.ApiDocsConfiguration"/>
+```
+
+`@Configuration` alone does not cause discovery. A class must first be registered, imported, or selected by a scan. Here it is outside the scanned package; even inside that package, a plain `@Configuration` would not match the controller/advice filters. Broadening both the scan hierarchy and filters could pull unrelated services or infrastructure into the MVC context. Explicit registration adds this one configuration while preserving the scan boundary.
+
+The `context:component-scan` element enables annotation processors even when its default discovery filters are disabled. `ConfigurationClassPostProcessor` therefore processes the XML-declared class, including its condition, imports, and bean methods. A false condition skips its contributions, but the ordinary XML-declared configuration object remains. This differs from scanning, where a false condition prevents discovery of the configuration bean itself. Explicit registration therefore preserves endpoint gating, with an inert configuration object in the disabled state. Tests assert both this object and the absence of its documentation contributions. See the [Spring 5.3 configuration API](https://docs.spring.io/spring-framework/docs/5.3.39/javadoc-api/org/springframework/context/annotation/Configuration.html) and [conditional API](https://docs.spring.io/spring-framework/docs/5.3.39/javadoc-api/org/springframework/context/annotation/Conditional.html).
 
 ## Decision: keep loading separate from matching
 
@@ -98,7 +122,7 @@ The Environment can resolve a changed source value when asked again, but that do
 
 ## Evidence and boundaries
 
-The [verification notes](VERIFICATION.md) record eight passing cases, including real packaged-WAR HTTP checks in both flag states. The suite checks inferred schemas and actual validation separately. It also demonstrates a missing-order JSON 404 that is not automatically documented in the generated operation.
+The [verification notes](VERIFICATION.md) record context and MockMvc checks plus real packaged-WAR HTTP checks in both flag states. The suite checks inferred schemas and actual validation separately. It also demonstrates a missing-order JSON 404 that is not automatically documented in the generated operation.
 
 Data is held in memory and lost on restart. External Tomcat installation, proxy configuration, production deployment, and a database-backed loader are outside the executed evidence.
 

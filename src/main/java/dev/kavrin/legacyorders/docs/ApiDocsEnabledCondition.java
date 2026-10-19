@@ -1,4 +1,4 @@
-package dev.example.legacyorders.docs;
+package dev.kavrin.legacyorders.docs;
 
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;

@@ -2,7 +2,7 @@
 
 An `ApplicationContextInitializer` is a callback that prepares a configurable Spring context before it is refreshed. Spring Framework provides this mechanism independently of Spring Boot. [Spring 5.3 API](https://docs.spring.io/spring-framework/docs/5.3.39/javadoc-api/org/springframework/context/ApplicationContextInitializer.html)
 
-In this example, preparation means adding a property source before Spring scans a conditional configuration class.
+In this example, preparation means adding a property source before Spring processes the explicitly XML-registered conditional configuration class.
 
 ## What refresh means here
 
@@ -19,7 +19,7 @@ This diagram is intentionally simplified. It is not a full description of every 
 
 ## Follow the actual implementation
 
-Open [ApiDocsPropertyInitializer.java](../../src/main/java/dev/example/legacyorders/config/ApiDocsPropertyInitializer.java). Its work is:
+Open [ApiDocsPropertyInitializer.java](../../src/main/java/dev/kavrin/legacyorders/config/ApiDocsPropertyInitializer.java). Its work is:
 
 ```java
 context.getEnvironment().getPropertySources().addLast(
@@ -33,7 +33,7 @@ The servlet declaration in [web.xml](../../src/main/webapp/WEB-INF/web.xml) regi
 ```xml
 <init-param>
   <param-name>contextInitializerClasses</param-name>
-  <param-value>dev.example.legacyorders.config.ApiDocsPropertyInitializer</param-value>
+  <param-value>dev.kavrin.legacyorders.config.ApiDocsPropertyInitializer</param-value>
 </init-param>
 ```
 
@@ -41,7 +41,7 @@ This parameter belongs to the DispatcherServlet and applies to its child context
 
 ## Why not PostConstruct or a normal service?
 
-`@PostConstruct` runs during initialization of an individual managed bean. It is too late to rely on that callback to supply a flag needed while configuration is being scanned. An initializer has an explicit earlier role and should not obtain application services whose lifecycle has not completed.
+`@PostConstruct` runs during initialization of an individual managed bean. It is too late to rely on that callback to supply a flag needed while configuration definitions are being processed. An initializer has an explicit earlier role and should not obtain application services whose lifecycle has not completed.
 
 An initializer is also different from `WebApplicationInitializer`, which configures servlet-container integration programmatically. This sample uses `web.xml` for container wiring and an `ApplicationContextInitializer` to prepare the Spring child context.
 

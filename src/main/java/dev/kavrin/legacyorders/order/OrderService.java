@@ -1,4 +1,4 @@
-package dev.example.legacyorders.order;
+package dev.kavrin.legacyorders.order;
 
 import java.util.List;
 import org.springframework.stereotype.Service;

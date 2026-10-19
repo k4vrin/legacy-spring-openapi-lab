@@ -1,7 +1,7 @@
-package dev.example.legacyorders.api;
+package dev.kavrin.legacyorders.api;
 
-import dev.example.legacyorders.order.Order;
-import dev.example.legacyorders.order.OrderLine;
+import dev.kavrin.legacyorders.order.Order;
+import dev.kavrin.legacyorders.order.OrderLine;
 import java.util.List;
 
 public final class OrderResponse {
